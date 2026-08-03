@@ -1,0 +1,24 @@
+{
+	"schemaVersion": 1,
+	"id": "anticheat-test",
+	"version": "${version}",
+	"name": "AntiCheat Test Suite",
+	"description": "Client-side movement/combat cheat simulator for testing your own server's anticheat. Not for use on servers you don't own or have explicit permission to test.",
+	"authors": ["Rayla / Blaze Industries"],
+	"contact": {},
+	"license": "MIT",
+	"icon": "assets/anticheat-test/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"net.blazeindustries.actest.AntiCheatTestClient"
+		]
+	},
+	"mixins": [],
+	"depends": {
+		"fabricloader": ">=0.18.1",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
