@@ -12,6 +12,10 @@ name: Build AntiCheat Test Suite
 # (Loom 1.17, per Fabric's porting notes). Gradle versions below 8.5
 # cannot run on JDK 21 ("Unsupported class file major version 65"), which
 # is why the pin matters -- don't let this drift back to an older default.
+#
+# setup-gradle has no per-directory input -- it just wires up caching for
+# whichever ./gradlew invocation runs later in the job, scoped by working
+# directory on that step instead.
 
 on:
   push:
@@ -34,13 +38,8 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      # Caches Gradle downloads/build state between runs; the wrapper
-      # (committed in this project) is what actually picks the Gradle
-      # version, this just wires up caching around it.
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          build-root-directory: anticheat-test-1.21.11
 
       - name: Grant execute permission for gradlew
         working-directory: anticheat-test-1.21.11
@@ -78,8 +77,6 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          build-root-directory: anticheat-test-26.2
 
       - name: Grant execute permission for gradlew
         working-directory: anticheat-test-26.2
