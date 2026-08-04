@@ -34,16 +34,18 @@ actually runs.
 
 ## Building
 
-Each folder is a standalone Gradle project:
+Each folder is a standalone Gradle project with its own committed wrapper:
 
 ```bash
 cd anticheat-test-1.21.11   # or anticheat-test-26.2
-gradle build
+./gradlew build
 ```
 
-(No `./gradlew` wrapper is committed — this sandbox couldn't reach Gradle's
-distribution servers to generate one. If you want a wrapper for local use,
-run `gradle wrapper` once you have Gradle installed and commit the result.)
+The wrapper pins the exact Gradle version each project needs (8.10 for
+1.21.11, 9.5.1 for 26.2) — don't let that drift to something generic like
+"latest" or a default template's version. Gradle versions before 8.5
+cannot run on JDK 21 at all (`Unsupported class file major version 65`),
+which is a common failure if a wrapper gets swapped for a stock one.
 
 The output jar lands in `build/libs/`. Drop it in your test client's `mods/`
 folder alongside a matching [Fabric API](https://modrinth.com/mod/fabric-api)

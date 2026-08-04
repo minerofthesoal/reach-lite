@@ -6,10 +6,12 @@ name: Build AntiCheat Test Suite
 # only runs if that gate passes, since there's no point spending CI time on
 # the experimental build if something more basic is already broken.
 #
-# Gradle version note: 1.21.11 uses Loom 1.7 (Gradle 8.x is fine); 26.2
-# needs Loom 1.17, which Fabric's own porting notes pinned to Gradle 9.5.1
-# at time of writing -- the two jobs below pin different Gradle versions
-# to match.
+# Each project ships its own committed Gradle wrapper (gradlew +
+# gradle/wrapper/gradle-wrapper.jar), pinned to the Gradle version that
+# project actually needs: 8.10 for 1.21.11 (Loom 1.7), 9.5.1 for 26.2
+# (Loom 1.17, per Fabric's porting notes). Gradle versions below 8.5
+# cannot run on JDK 21 ("Unsupported class file major version 65"), which
+# is why the pin matters -- don't let this drift back to an older default.
 
 on:
   push:
@@ -32,17 +34,21 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      # No gradlew is committed (see README) -- this provisions Gradle
-      # directly and caches dependencies/build outputs between runs.
+      # Caches Gradle downloads/build state between runs; the wrapper
+      # (committed in this project) is what actually picks the Gradle
+      # version, this just wires up caching around it.
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: 8.10
           build-root-directory: anticheat-test-1.21.11
+
+      - name: Grant execute permission for gradlew
+        working-directory: anticheat-test-1.21.11
+        run: chmod +x gradlew
 
       - name: Build
         working-directory: anticheat-test-1.21.11
-        run: gradle build --stacktrace
+        run: ./gradlew build --stacktrace
 
       - name: Upload jar
         uses: actions/upload-artifact@v4
@@ -73,12 +79,15 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: 9.5.1
           build-root-directory: anticheat-test-26.2
+
+      - name: Grant execute permission for gradlew
+        working-directory: anticheat-test-26.2
+        run: chmod +x gradlew
 
       - name: Build
         working-directory: anticheat-test-26.2
-        run: gradle build --stacktrace
+        run: ./gradlew build --stacktrace
 
       - name: Upload jar
         uses: actions/upload-artifact@v4
