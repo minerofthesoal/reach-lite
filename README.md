@@ -38,8 +38,12 @@ Each folder is a standalone Gradle project:
 
 ```bash
 cd anticheat-test-1.21.11   # or anticheat-test-26.2
-./gradlew build
+gradle build
 ```
+
+(No `./gradlew` wrapper is committed — this sandbox couldn't reach Gradle's
+distribution servers to generate one. If you want a wrapper for local use,
+run `gradle wrapper` once you have Gradle installed and commit the result.)
 
 The output jar lands in `build/libs/`. Drop it in your test client's `mods/`
 folder alongside a matching [Fabric API](https://modrinth.com/mod/fabric-api)
@@ -49,6 +53,17 @@ Before building, check the version numbers pinned in `gradle.properties`
 against the current recommendations at https://fabricmc.net/develop/ —
 Fabric bumps loader/API patch releases often and a stale one can fail to
 resolve.
+
+## CI
+
+`.github/workflows/build.yml` builds both projects on every push/PR to
+`main`, in sequence: **1.21.11 first** (the well-verified build, which also
+acts as a smoke test that the workflow itself is healthy), and **26.2**
+only if that passes. The 26.2 job is set to `continue-on-error: true` since
+it's the experimental build — a failure there shows up amber in the Actions
+tab instead of failing the whole workflow red, so it won't block anything
+depending on 1.21.11 while you iron out the mapping fixes noted above.
+Both jobs upload their jar as a build artifact either way.
 
 ## Modules (default keybinds, rebindable in Options > Controls)
 

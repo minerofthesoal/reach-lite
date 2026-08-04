@@ -1,0 +1,88 @@
+name: Build AntiCheat Test Suite
+
+# Builds the two mod versions in sequence rather than in parallel:
+# 1.21.11 first, since that build is the well-verified one and doubles as a
+# smoke test that the workflow/toolchain itself is healthy. The 26.2 build
+# only runs if that gate passes, since there's no point spending CI time on
+# the experimental build if something more basic is already broken.
+#
+# Gradle version note: 1.21.11 uses Loom 1.7 (Gradle 8.x is fine); 26.2
+# needs Loom 1.17, which Fabric's own porting notes pinned to Gradle 9.5.1
+# at time of writing -- the two jobs below pin different Gradle versions
+# to match.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build-1211:
+    name: "Build & verify (1.21.11)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # No gradlew is committed (see README) -- this provisions Gradle
+      # directly and caches dependencies/build outputs between runs.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.10
+          build-root-directory: anticheat-test-1.21.11
+
+      - name: Build
+        working-directory: anticheat-test-1.21.11
+        run: gradle build --stacktrace
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: anticheat-test-1.21.11
+          path: anticheat-test-1.21.11/build/libs/*.jar
+          if-no-files-found: error
+
+  build-262:
+    name: "Build (26.2, experimental)"
+    needs: build-1211
+    runs-on: ubuntu-latest
+    # 26.2 was released after this mod's mappings were last verified by hand
+    # (see README "A note on scope") -- don't fail the whole workflow red
+    # over a mapping-name mismatch here, but the job status below still
+    # shows amber/failed so it's not silently swallowed.
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 9.5.1
+          build-root-directory: anticheat-test-26.2
+
+      - name: Build
+        working-directory: anticheat-test-26.2
+        run: gradle build --stacktrace
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: anticheat-test-26.2
+          path: anticheat-test-26.2/build/libs/*.jar
+          if-no-files-found: error
